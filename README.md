@@ -175,8 +175,7 @@ agentic-soc/
 ├── analyst_review.py
 ├── cases/
 ├── screenshots/
-├── architecture/
-└── docs/
+└── architecture/
 ```
 
 
