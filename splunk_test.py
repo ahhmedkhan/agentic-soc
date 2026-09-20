@@ -12,6 +12,32 @@ def count_related_failures(search_url, username, password, user, agent):
     | search wazuh_agent="{agent}" target_user="{user}"
     | stats count
     '''
+
+    data = {
+        "search": correlation_search,
+        "output_mode": "json"
+    }
+
+    response = requests.post(
+        search_url,
+        auth=(username, password),
+        data=data,
+        verify=False,
+        timeout=30
+    )
+
+    response.raise_for_status()
+
+    for line in response.text.splitlines():
+        if not line.strip():
+            continue
+
+        item = json.loads(line)
+
+        if "result" in item:
+            return int(item["result"].get("count", 0))
+
+    return 0
 def get_related_endpoint_events(search_url, username, password, agent):
     correlation_search = f'''
     search index=main _index_earliest=-5m "{agent}"
@@ -56,31 +82,6 @@ def get_related_endpoint_events(search_url, username, password, agent):
 
     return related_events
 
-    data = {
-        "search": correlation_search,
-        "output_mode": "json"
-    }
-
-    response = requests.post(
-        search_url,
-        auth=(username, password),
-        data=data,
-        verify=False,
-        timeout=30
-    )
-
-    response.raise_for_status()
-
-    for line in response.text.splitlines():
-        if not line.strip():
-            continue
-
-        item = json.loads(line)
-
-        if "result" in item:
-            return int(item["result"].get("count", 0))
-
-    return 0
 
 from triage_agent import triage_alert, save_case
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
